@@ -1,0 +1,6 @@
+README.md
+setup.py
+DI2_JupitersMight.egg-info/PKG-INFO
+DI2_JupitersMight.egg-info/SOURCES.txt
+DI2_JupitersMight.egg-info/dependency_links.txt
+DI2_JupitersMight.egg-info/top_level.txt
