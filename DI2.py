@@ -8,7 +8,7 @@ Provides
   3. Goodness of fit tests between two continuous data distributions
 
 ----------------------------
-Documentation is available at github.
+Documentation is available at https://github.com/JupitersMight/DI2
 
 """
 
@@ -468,7 +468,8 @@ class Discretizer:
         y_std = _get_normalized_data(column, normalizer)
 
         best_dist = ""
-        best_statistic = data_used = -1
+        best_statistic = -1
+        data_used = -1
 
         for distribution in distributions:
             results = []
@@ -482,9 +483,6 @@ class Discretizer:
                 best_statistic = results[0]
                 best_dist = distribution
                 data_used = results[1]
-
-        print(best_statistic)
-        print(best_dist)
 
         # Set up bins for discretization
         percentile_bins = np.linspace(0, 100, (number_of_bins + 1))
@@ -536,7 +534,7 @@ class Discretizer:
                         curr_category += 0.5
                     else:
                         aux += 1
-        return [new_column, best_statistic]
+        return [new_column, best_dist, best_statistic]
 
     @staticmethod
     def chi_squared_significant(chi_squared_statistic, df):
