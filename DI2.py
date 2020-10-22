@@ -8,7 +8,7 @@ Provides
   3. Goodness of fit tests between two continuous data distributions
 
 ----------------------------
-Documentation is available at https://github.com/JupitersMight/DI2
+Documentation is available at github.
 
 """
 
@@ -421,7 +421,7 @@ class Discretizer:
     @staticmethod
     def distribution_discretizer(column, number_of_bins, statistical_test="chi2", cutoff_margin=0.2, kolmogorov_opt=True,
                                  normalizer="min_max", distributions=None):
-        """Discretizes data according to the best fitting distribution (from
+        """Discretizes data according to the best fitting distribution
 
         Parameters
         ----------
@@ -468,8 +468,7 @@ class Discretizer:
         y_std = _get_normalized_data(column, normalizer)
 
         best_dist = ""
-        best_statistic = -1
-        data_used = -1
+        best_statistic = data_used = -1
 
         for distribution in distributions:
             results = []
@@ -493,10 +492,11 @@ class Discretizer:
 
         new_percentile_bins = [percentile_bins[0]]
         for i in range(1, len(percentile_bins) - 1):
-            new_percentile_bins.append(percentile_bins[i] / 100)
             if 0.0 < cutoff_margin < 0.5:
                 get_boundary = (percentile_bins[i] - percentile_bins[i-1]) * cutoff_margin
                 new_percentile_bins.append((percentile_bins[i] - get_boundary) / 100)
+            new_percentile_bins.append(percentile_bins[i] / 100)
+            if 0.0 < cutoff_margin < 0.5:
                 get_boundary = (percentile_bins[i+1] - percentile_bins[i]) * cutoff_margin
                 new_percentile_bins.append((percentile_bins[i] + get_boundary) / 100)
         new_percentile_bins.append((percentile_bins[len(percentile_bins) - 1]) / 100)
@@ -507,6 +507,7 @@ class Discretizer:
             cutoff_points.append(dist.ppf(new_percentile_bins[i], *param[:-2], loc=param[-2], scale=param[-1]))
 
         # Discretize according to cutoff points with noise tolerance
+        cutoff_points = new_percentile_bins
         new_column = []
         index = -1
         for value in column:
@@ -521,20 +522,29 @@ class Discretizer:
                 new_column.append(len(percentile_bins) - 2)
             else:
                 curr_category = 0.0
-                aux = 0
-                for i in range(1, len(cutoff_points) - 1):
-                    if value < cutoff_points[i]:
-                        new_column.append(curr_category)
-                        break
-                    if curr_category.is_integer():
-                        curr_category += 0.5
-                        aux = 0
-                    elif aux == 1:
-                        aux = 0
-                        curr_category += 0.5
-                    else:
-                        aux += 1
-        return [new_column, best_dist, best_statistic]
+                if cutoff_margin > 0.0:
+                    aux = 0
+                    for i in range(1, len(cutoff_points) - 1):
+                        if value < cutoff_points[i]:
+                            new_column.append(curr_category)
+                            break
+                        if curr_category.is_integer():
+                            curr_category += 0.5
+                            aux = 0
+                        elif aux == 1:
+                            aux = 0
+                            curr_category += 0.5
+                        else:
+                            aux += 1
+                else:
+                    for i in range(1, len(cutoff_points) - 1):
+                        if value < cutoff_points[i]:
+                            new_column.append(curr_category)
+                            break
+                        else:
+                            curr_category += 1
+
+        return [new_column, best_statistic]
 
     @staticmethod
     def chi_squared_significant(chi_squared_statistic, df):
