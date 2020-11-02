@@ -1,4 +1,4 @@
-# DI2 (Distribution Discretizer)
+# DI2 (Distribution Discretizer) Instructions
 
 ## Data normalization:
 
@@ -26,3 +26,7 @@ Returns a list. [0] : Kolmogorov-Smirnov statistic : float, [1] : data : array.f
 Discretizer.**distribution_discretizer(pandas.Series, integer, optional:string, optional:float, optional:boolean, optional:string, optional:array)** - Discretizes data according to the best fitting distribution.
 
 The **distribution_discretizer(pandas.Series, integer, string, float, boolean, string, array)** receives the data (**pandas.Series**), an **integer** representing the number of categories for discretization, an **string** with the name of the main statistical hypothesis test to apply (options available: **"chi2"**, **"ks"**), a **float** between 0 and 0.49 which indicates the width range to consider a value as being a border value, a **boolean** indicating if outliers should be removed, a **string**  indicating the normalization method to be used (options available: **"min_max"**,**"mean"**, **z_score**), an **array** of continuous distributions, from https://docs.scipy.org/doc/scipy/reference/stats.html, to be considered by the discretizer.
+
+As an illustrative example we use the dataset available at the UCI machine learning repository https://archive.ics.uci.edu/ml/datasets/Breast+Tissue.
+
+---> DI2 was developed by L. Alexandre, R.S. Costa and R. Henriques <---
