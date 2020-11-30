@@ -507,7 +507,6 @@ class Discretizer:
             cutoff_points.append(dist.ppf(new_percentile_bins[i], *param[:-2], loc=param[-2], scale=param[-1]))
 
         # Discretize according to cutoff points with noise tolerance
-        cutoff_points = new_percentile_bins
         new_column = []
         index = -1
         for value in column:
@@ -516,16 +515,16 @@ class Discretizer:
                 continue
             index += 1
             value = y_std[index]
-            if value < cutoff_points[1]:
+            if value <= cutoff_points[1]:
                 new_column.append(0)
-            elif value > cutoff_points[len(cutoff_points) - 2]:
+            elif value >= cutoff_points[len(cutoff_points) - 2]:
                 new_column.append(len(percentile_bins) - 2)
             else:
                 curr_category = 0.0
                 if cutoff_margin > 0.0:
                     aux = 0
                     for i in range(1, len(cutoff_points) - 1):
-                        if value < cutoff_points[i]:
+                        if value <= cutoff_points[i]:
                             new_column.append(curr_category)
                             break
                         if curr_category.is_integer():
