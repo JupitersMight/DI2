@@ -19,6 +19,7 @@ import scipy
 import numpy as np
 import math
 import scipy.stats
+import matplotlib.pyplot as plt
 
 import warnings
 
@@ -419,13 +420,13 @@ class Discretizer:
         return results
 
     @staticmethod
-    def distribution_discretizer(column, number_of_bins, statistical_test="chi2", cutoff_margin=0.2, kolmogorov_opt=True,
-                                 normalizer="min_max", distributions=None):
+    def distribution_discretizer(dataset, number_of_bins, statistical_test="chi2", cutoff_margin=0.2, kolmogorov_opt=True,
+                                 normalizer="min_max", distributions=None, single_column_discretization=True):
         """Discretizes data according to the best fitting distribution
 
         Parameters
         ----------
-        column : pandas.Series
+        dataset : pandas.Dataframe
             Your continuous observed distribution
         number_of_bins : int
             Number of categories for discretization
@@ -439,12 +440,12 @@ class Discretizer:
             Name of the scaling technique to use (available techniques: "min_max", "mean", "z_score")
         distributions : array.String, optional
             Names of continuous distributions from https://docs.scipy.org/doc/scipy/reference/stats.html
-
+        single_column_discretization : boolean, optional
+            Flag to indicate if DI2 should consider each column to follow a distribution or the dataset as whole to follow a distribution
         Returns
         -------
-        list
-            [0] : data : array.float
-            [1] : statistical hypothesis test statistic : float
+        pandas.Dataframe
+
         """
 
         if distributions is None:
@@ -464,52 +465,57 @@ class Discretizer:
                              "semicircular", "t", "trapz", "triang",
                              "truncexpon", "uniform",
                              "wald", "weibull_min", "weibull_max"]
+        y_std = []
+        if not single_column_discretization:
+            for column in dataset.columns:
+                y_std.extend(_get_normalized_data(dataset[column], normalizer))
 
-        y_std = _get_normalized_data(column, normalizer)
+            best_dist, best_statistic, data_used = Discretizer.best_distribution(distributions, kolmogorov_opt,
+                                                                                 number_of_bins, statistical_test,
+                                                                                 y_std)
 
-        best_dist = ""
-        best_statistic = data_used = -1
+            for column in dataset.columns:
+                dataset[column] = Discretizer.discritize(best_dist, cutoff_margin, data_used, dataset[column],
+                                                        number_of_bins, _get_normalized_data(dataset[column], normalizer))
+        else:
+            for column in dataset.columns:
+                y_std = _get_normalized_data(dataset[column], normalizer)
 
-        for distribution in distributions:
-            results = []
-            if statistical_test == "chi2":
-                results = Discretizer.kolmogorov_goodness_of_fit(y_std.copy(), distribution, kolmogorov_opt)
-                results = Discretizer.chi_squared_goodness_of_fit(results[1], distribution, number_of_bins)
-            elif statistical_test == "ks":
-                results = Discretizer.kolmogorov_goodness_of_fit(y_std.copy(), distribution, kolmogorov_opt)
+                best_dist, best_statistic, data_used = Discretizer.best_distribution(distributions, kolmogorov_opt,
+                                                                                     number_of_bins, statistical_test,
+                                                                                     y_std)
 
-            if best_statistic == -1 or results[0] < best_statistic:
-                best_statistic = results[0]
-                best_dist = distribution
-                data_used = results[1]
+                dataset[column] = Discretizer.discritize(best_dist, cutoff_margin, data_used, dataset[column], number_of_bins, y_std)
 
+        return dataset
+
+    @staticmethod
+    def discritize(best_dist, cutoff_margin, data_used, dataset, number_of_bins, y_std):
         # Set up bins for discretization
         percentile_bins = np.linspace(0, 100, (number_of_bins + 1))
         percentile_bins.sort()
         # Fit distribution according to column
         dist = Distributions().get_dist(best_dist)
         param = dist.fit(data_used)
-
         new_percentile_bins = [percentile_bins[0]]
         for i in range(1, len(percentile_bins) - 1):
             if 0.0 < cutoff_margin < 0.5:
-                get_boundary = (percentile_bins[i] - percentile_bins[i-1]) * cutoff_margin
+                get_boundary = (percentile_bins[i] - percentile_bins[i - 1]) * cutoff_margin
                 new_percentile_bins.append((percentile_bins[i] - get_boundary) / 100)
             new_percentile_bins.append(percentile_bins[i] / 100)
             if 0.0 < cutoff_margin < 0.5:
-                get_boundary = (percentile_bins[i+1] - percentile_bins[i]) * cutoff_margin
+                get_boundary = (percentile_bins[i + 1] - percentile_bins[i]) * cutoff_margin
                 new_percentile_bins.append((percentile_bins[i] + get_boundary) / 100)
         new_percentile_bins.append((percentile_bins[len(percentile_bins) - 1]) / 100)
-
         # Find cutoff points for given distribution
         cutoff_points = []
         for i in range(0, len(new_percentile_bins)):
             cutoff_points.append(dist.ppf(new_percentile_bins[i], *param[:-2], loc=param[-2], scale=param[-1]))
-
         # Discretize according to cutoff points with noise tolerance
         new_column = []
         index = -1
-        for value in column:
+        for column_val_index in range(0, dataset.size):
+            value = dataset[column_val_index]
             if pd.isna(value):
                 new_column.append(np.nan)
                 continue
@@ -542,8 +548,29 @@ class Discretizer:
                             break
                         else:
                             curr_category += 1
+        return new_column
 
-        return [new_column, best_statistic]
+    @staticmethod
+    def best_distribution(distributions, kolmogorov_opt, number_of_bins, statistical_test, y_std):
+        best_dist = ""
+        best_statistic = data_used = -1
+        kol = -1
+        for distribution in distributions:
+            results = []
+            temp_kol = -1
+            if statistical_test == "chi2":
+                results = Discretizer.kolmogorov_goodness_of_fit(y_std.copy(), distribution, kolmogorov_opt)
+                temp_kol = results[0]
+                results = Discretizer.chi_squared_goodness_of_fit(results[1], distribution, number_of_bins)
+            elif statistical_test == "ks":
+                results = Discretizer.kolmogorov_goodness_of_fit(y_std.copy(), distribution, kolmogorov_opt)
+
+            if best_statistic == -1 or results[0] < best_statistic:
+                kol = temp_kol
+                best_statistic = results[0]
+                best_dist = distribution
+                data_used = results[1]
+        return best_dist, best_statistic, data_used
 
     @staticmethod
     def chi_squared_significant(chi_squared_statistic, df):
