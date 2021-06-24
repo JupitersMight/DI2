@@ -458,7 +458,7 @@ class Discretizer:
                              "cauchy", "chi", "chi2", "cosine", "crystalball",
                              "dgamma", "dweibull", "erlang", "expon", "exponnorm",
                              "f", "fatiguelife", "foldcauchy", "foldnorm",
-                             "frechet_r", "frechet_l", "genlogistic", "gennorm", "genpareto",
+                             "genlogistic", "gennorm", "genpareto",
                              "genextreme", "gamma", "gengamma", "genhalflogistic",
                              "gilbrat", "gumbel_r", "gumbel_l", "halfcauchy", "halflogistic",
                              "halfnorm", "hypsecant", "invgamma", "invgauss",
