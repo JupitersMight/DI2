@@ -1,3 +1,4 @@
+LICENSE
 README.md
 setup.py
 DI2_JupitersMight.egg-info/PKG-INFO

@@ -331,6 +331,7 @@ class Discretizer:
         list
             [0] : chi-squared statistic : float
             [1] : data : array.float
+            [2] : number of estimated parameters : int
         """
         # Set up distribution and get fitted distribution parameters
         percentile_bins = np.linspace(0, 100, (number_of_bins + 1))
@@ -345,6 +346,7 @@ class Discretizer:
         percentile_cutoffs[0] = -math.inf
         percentile_cutoffs[len(percentile_cutoffs) - 1] = math.inf
         cdf_fitted = dist.cdf(percentile_cutoffs, *param[:-2], loc=param[-2], scale=param[-1])
+        num_estimated_parameters = len(param)-2
         cdf_fitted.sort()
         expected_frequency = []
         for bin in range(len(percentile_bins) - 1):
@@ -355,7 +357,7 @@ class Discretizer:
         for i in range(len(expected_frequency)):
             expected_frequency[i] = expected_frequency[i] * size
             ss += ((observed_frequency[i] - expected_frequency[i]) * (observed_frequency[i] - expected_frequency[i])) / expected_frequency[i]
-        return [ss, data]
+        return [ss, data, num_estimated_parameters]
 
     @staticmethod
     def kolmogorov_goodness_of_fit(data, distribution, outlier_removal=False):
@@ -375,10 +377,11 @@ class Discretizer:
         list
             [0] : Kolmogorov-Smirnov statistic : float
             [1] : data : array.float
+            [2] : number of estimated parameters : int
         """
         # 5% of original points
         N5 = int(len(data) * 0.05) if outlier_removal else 1
-
+        num_estimated_parameters = 0
         results = []
         for aux in range(0, N5):
             dist = Distributions().get_dist(distribution)
@@ -388,6 +391,7 @@ class Discretizer:
             D_minus = []
             param = dist.fit(data)
             cdfvals = dist.cdf(data, *param[:-2], loc=param[-2], scale=param[-1])
+            num_estimated_parameters = len(param)-2
 
             idx_max_d_plus = 0
             # Calculate max(i/N-Ri)
@@ -417,6 +421,7 @@ class Discretizer:
             else:
                 del data[idx_max_d_minus]
 
+        results.append(num_estimated_parameters)
         return results
 
     @staticmethod
@@ -479,6 +484,7 @@ class Discretizer:
                                                         number_of_bins, _get_normalized_data(dataset[column], normalizer))
         else:
             for column in dataset.columns:
+                print("variable: " + column)
                 y_std = _get_normalized_data(dataset[column], normalizer)
 
                 best_dist, best_statistic, data_used = Discretizer.best_distribution(distributions, kolmogorov_opt,
@@ -552,29 +558,65 @@ class Discretizer:
 
     @staticmethod
     def best_distribution(distributions, kolmogorov_opt, number_of_bins, statistical_test, y_std):
-        best_dist = ""
-        best_statistic = data_used = -1
-        kol = -1
+        dist_list = []
         for distribution in distributions:
             results = []
-            temp_kol = -1
             if statistical_test == "chi2":
-                results = Discretizer.kolmogorov_goodness_of_fit(y_std.copy(), distribution, kolmogorov_opt)
-                temp_kol = results[0]
-                results = Discretizer.chi_squared_goodness_of_fit(results[1], distribution, number_of_bins)
+                if kolmogorov_opt:
+                    results = Discretizer.kolmogorov_goodness_of_fit(y_std.copy(), distribution, kolmogorov_opt)
+                    results = Discretizer.chi_squared_goodness_of_fit(results[1], distribution, number_of_bins)
+                else:
+                    results = Discretizer.chi_squared_goodness_of_fit(y_std.copy(), distribution, number_of_bins)
             elif statistical_test == "ks":
                 results = Discretizer.kolmogorov_goodness_of_fit(y_std.copy(), distribution, kolmogorov_opt)
 
-            if best_statistic == -1 or results[0] < best_statistic:
-                kol = temp_kol
-                best_statistic = results[0]
-                best_dist = distribution
-                data_used = results[1]
+            dist_list.append({"distribution": distribution, "statistic": statistical_test, "statistic_value": results[0], "data": results[1], "num_estimated_parameters": results[2]})
+
+        best_dist = ""
+        best_statistic = data_used = -1
+        is_significant = False
+        for value in dist_list:
+            significant = False
+            if value["statistic"] == "chi2":
+                significant = Discretizer.chi_squared_significant(value["statistic_value"], number_of_bins-1-value["num_estimated_parameters"])
+            else:
+                significant = Discretizer.kolmogorov_significant(value["statistic_value"], len(value["data"]))
+
+            if significant and best_statistic == -1:
+                best_dist = value["distribution"]
+                best_statistic = value["statistic_value"]
+                data_used = value["data"]
+                is_significant = True
+            elif significant and best_statistic > value["statistic_value"]:
+                best_dist = value["distribution"]
+                best_statistic = value["statistic_value"]
+                data_used = value["data"]
+                is_significant = True
+        if best_statistic == -1:
+            for value in dist_list:
+                if best_statistic == -1:
+                    best_dist = value["distribution"]
+                    best_statistic = value["statistic_value"]
+                    data_used = value["data"]
+                elif best_statistic > value["statistic_value"]:
+                    best_dist = value["distribution"]
+                    best_statistic = value["statistic_value"]
+                    data_used = value["data"]
+        
+        
+        print(statistical_test)
+        print(best_statistic)
+        print("best distribution:" + best_dist)
+        print("passes statistical test:" + str(is_significant))
+        
         return best_dist, best_statistic, data_used
 
-    @staticmethod
+     @staticmethod
     def chi_squared_significant(chi_squared_statistic, df):
-        return chi_squared_statistic < chi_squared_table[0.05][df]
+        if df < 1:
+            return False
+        else:
+            return chi_squared_statistic < chi_squared_table[0.05][df]
 
     @staticmethod
     def kolmogorov_significant(kolmogorov_statistic, size):
