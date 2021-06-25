@@ -30,4 +30,4 @@ The **distribution_discretizer(pandas.Dataframe, integer, string, float, boolean
 
 As an illustrative example we use the dataset available at the UCI machine learning repository https://archive.ics.uci.edu/ml/datasets/Breast+Tissue.
 
----> DI2 was developed by L. Alexandre, R.S. Costa (rs.costa@fct.unl.pt) and R. Henriques <---
+---> DI2 was developed by L. Alexandre (leonardoalexandre@tecnico.ulisboa.pt), R.S. Costa (rs.costa@fct.unl.pt) and R. Henriques <---
