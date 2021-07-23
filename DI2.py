@@ -423,7 +423,7 @@ class Discretizer:
         return results
 
     @staticmethod
-    def distribution_discretizer(dataset, number_of_bins, statistical_test="chi2", cutoff_margin=0.2, kolmogorov_opt=True,
+    def distribution_discretizer(dataset, number_of_bins, statistical_test="chi2", cutoff_margin=0.2, kolmogorov_opt=False,
                                  normalizer="min_max", distributions=None, single_column_discretization=True):
         """Discretizes data according to the best fitting distribution
 
