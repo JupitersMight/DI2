@@ -214,8 +214,6 @@ class Distributions:
             "fisk": scipy.stats.fisk,
             "foldcauchy": scipy.stats.foldcauchy,
             "foldnorm": scipy.stats.foldnorm,
-            "frechet_r": scipy.stats.frechet_r,
-            "frechet_l": scipy.stats.frechet_l,
             "genlogistic": scipy.stats.genlogistic,
             "gennorm": scipy.stats.gennorm,
             "genpareto": scipy.stats.genpareto,
@@ -611,7 +609,7 @@ class Discretizer:
         
         return best_dist, best_statistic, data_used
 
-     @staticmethod
+    @staticmethod
     def chi_squared_significant(chi_squared_statistic, df):
         if df < 1:
             return False
