@@ -1,5 +1,9 @@
 # DI2 (Distribution Discretizer)
 
+## Import
+
+import DI2
+
 ## Discretizer
 
 **distribution_discretizer(dataset, number_of_bins, statistical_test, cutoff_margin, kolmogorov_opt, normalizer, distributions, single_column_discretization)**
