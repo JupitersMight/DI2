@@ -1,5 +1,6 @@
 LICENSE
 README.md
+pyproject.toml
 setup.py
 DI2_JupitersMight.egg-info/PKG-INFO
 DI2_JupitersMight.egg-info/SOURCES.txt

@@ -1,0 +1,10 @@
+LICENSE
+README.md
+pyproject.toml
+setup.py
+DI2/DI2.py
+DI2/__init__.py
+DI2.egg-info/PKG-INFO
+DI2.egg-info/SOURCES.txt
+DI2.egg-info/dependency_links.txt
+DI2.egg-info/top_level.txt

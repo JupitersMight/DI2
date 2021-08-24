@@ -1,11 +1,12 @@
 Metadata-Version: 2.1
 Name: DI2-JupitersMight
-Version: 0.0.1
-Summary: A library used to discretize data according to a distribution
+Version: 1.0.0
+Summary: An an unsupervised discretization method, DI2, for variables with arbitrarily skewed distributions.
 Home-page: https://github.com/JupitersMight/DI2
 Author: Leonardo Alexandre
 Author-email: leonardoalexandre@tecnico.ulisboa.pt
 License: UNKNOWN
+Project-URL: Bug Tracker, https://github.com/JupitersMight/DI2/issues
 Platform: UNKNOWN
 Classifier: Programming Language :: Python :: 3
 Classifier: License :: OSI Approved :: MIT License
@@ -46,6 +47,6 @@ The **distribution_discretizer(pandas.Dataframe, integer, string, float, boolean
 
 As an illustrative example we use the dataset available at the UCI machine learning repository https://archive.ics.uci.edu/ml/datasets/Breast+Tissue.
 
----> DI2 was developed by L. Alexandre, R.S. Costa (rs.costa@fct.unl.pt) and R. Henriques <---
+---> DI2 was developed by L. Alexandre (leonardoalexandre@tecnico.ulisboa.pt), R.S. Costa (rs.costa@fct.unl.pt) and R. Henriques <---
 
 
