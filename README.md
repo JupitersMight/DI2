@@ -1,6 +1,6 @@
 # DI2 (Distribution Discretizer)
 
-## Citation
+## Article
 
 Alexandre, L., Costa, R.S. & Henriques, R. DI2: prior-free and multi-item discretization of biological data and its applications. BMC Bioinformatics 22, 426 (2021). https://doi.org/10.1186/s12859-021-04329-8
 
